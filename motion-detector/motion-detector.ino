@@ -44,6 +44,9 @@ const unsigned long pause_between_update_attempts = 86400000;
 
 String esp_chipid;
 
+char wlanssid[65] = "foo";
+char wlanpwd[65] = "bar";
+
 /*****************************************************************
 /* Debug output                                                  *
 /*****************************************************************/
@@ -55,12 +58,58 @@ void debug_out(const String& text, const bool linebreak) {
 	}
 }
 
+/*****************************************************************
+/* IPAddress to String                                           *
+/*****************************************************************/
+String IPAddress2String(const IPAddress& ipaddress) {
+	char myIpString[24];
+	sprintf(myIpString, "%d.%d.%d.%d", ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3]);
+	return String(myIpString);
+}
+
+/*****************************************************************
+/* WiFi auto connecting script                                   *
+/*****************************************************************/
+void connectWifi() {
+#if defined(ESP8266)
+	int retry_count = 0;
+	debug_out(String(WiFi.status()),1);
+	WiFi.mode(WIFI_STA);
+	WiFi.begin(wlanssid, wlanpwd); // Start WiFI
+
+	debug_out(F("Connecting to "),0);
+	debug_out(wlanssid,1);
+
+	while ((WiFi.status() != WL_CONNECTED) && (retry_count < 20)) {
+		delay(500);
+		debug_out(".",0);
+		retry_count++;
+	}
+	debug_out("",1);
+	if (WiFi.status() != WL_CONNECTED) {		
+		if (WiFi.status() != WL_CONNECTED) {
+			retry_count = 0;
+			while ((WiFi.status() != WL_CONNECTED) && (retry_count < 20)) {
+				delay(500);
+				debug_out(".",0);
+				retry_count++;
+			}
+			debug_out("",1);
+		}
+	}
+	WiFi.softAPdisconnect(true);
+	debug_out(F("WiFi connected\nIP address: "),0);
+	debug_out(IPAddress2String(WiFi.localIP()),1);
+#endif
+}
+
 void setup() 
 {
   Serial.begin(9600);
   Wire.begin(D3,D4);
   esp_chipid = String(ESP.getChipId());
   WiFi.persistent(false);
+  connectWifi();
   pinMode(pirPin, INPUT);
   pinMode(redpin, OUTPUT);
   delay(10);
@@ -95,6 +144,18 @@ void loop()
 	
   if ((act_milli-last_update_attempt) > (28 * pause_between_update_attempts)) {
 	ESP.restart();
+  }
+  
+  if (WiFi.status() != WL_CONNECTED) {  // reconnect if connection lost
+	int retry_count = 0;
+	debug_out(F("Connection lost, reconnecting "),0);
+	WiFi.reconnect();
+	while ((WiFi.status() != WL_CONNECTED) && (retry_count < 20)) {
+		delay(500);
+		debug_out(".",0);
+		retry_count++;
+	}
+	debug_out("",1);
   }
   
   yield();
