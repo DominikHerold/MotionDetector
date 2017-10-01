@@ -36,6 +36,7 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 
 #define pirPin D1 // Input for HC-SR501
 #define redpin D2
+#define bluepin D5
 
 int pirValue; // variable to store read PIR Value
 unsigned long act_milli;
@@ -99,6 +100,10 @@ void connectWifi() {
 				debug_out(".",0);
 				retry_count++;
 			}
+			if (retry_count == 20){
+				analogWrite(bluepin, 250);
+			}
+			
 			debug_out("",1);
 		}
 	}
@@ -173,9 +178,10 @@ void setup()
   Wire.begin(D3,D4);
   esp_chipid = String(ESP.getChipId());
   WiFi.persistent(false);
-  connectWifi();
   pinMode(pirPin, INPUT);
   pinMode(redpin, OUTPUT);
+  pinMode(bluepin, OUTPUT);
+  connectWifi();  
   delay(10);
   debug_out("\nChipId: ",0);
   debug_out(esp_chipid,1);
@@ -225,7 +231,19 @@ void loop()
 		debug_out(".",0);
 		retry_count++;
 	}
+	
+	if (retry_count == 20){
+		analogWrite(redpin, 0);
+		analogWrite(bluepin, 250);
+	}
+	else{
+		analogWrite(bluepin, 0);
+	}
+	
 	debug_out("",1);
+  }
+  else{
+	  analogWrite(bluepin, 0);
   }
   
   yield();
