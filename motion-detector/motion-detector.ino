@@ -46,6 +46,9 @@ String esp_chipid;
 
 char wlanssid[65] = "foo";
 char wlanpwd[65] = "bar";
+String data = "token=foo&user=bar&message=BEWEGUNG BEWEGUNG BEWEGUNG"; // https://pushover.net/api
+const char* host_pushover = "api.pushover.net";
+const char* url_pushover = "/1/messages.json";
 
 /*****************************************************************
 /* Debug output                                                  *
@@ -103,6 +106,65 @@ void connectWifi() {
 #endif
 }
 
+/*****************************************************************
+/* send data to rest api                                         *
+/*****************************************************************/
+void sendData(const String& data, const char* host, const int httpPort, const char* url, const String& contentType) {
+#if defined(ESP8266)
+
+	debug_out(F("Start connecting to "),0);
+	debug_out(host,1);
+	
+	String request_head = F("POST "); request_head += String(url); request_head += F(" HTTP/1.1\r\n");
+	request_head += F("Host: "); request_head += String(host) + "\r\n";
+	request_head += F("Content-Type: "); request_head += contentType + "\r\n";
+	request_head += F("Content-Length: "); request_head += String(data.length(),DEC) + "\r\n";
+	request_head += F("Connection: close\r\n\r\n");
+
+	// Use WiFiClient class to create TCP connections
+
+	if (httpPort == 443) {
+
+		WiFiClientSecure client_s;
+		
+		client_s.setNoDelay(true);
+		client_s.setTimeout(20000);
+
+		if (!client_s.connect(host, httpPort)) {
+			debug_out(F("connection failed"),1);
+			return;
+		}
+
+		debug_out(F("Requesting URL: "),0);
+		debug_out(url,1);
+		debug_out(esp_chipid,1);
+		debug_out(data,1);
+
+		// send request to the server
+
+		client_s.print(request_head);
+
+		client_s.println(data);
+
+		delay(10);
+
+		// Read reply from server and print them
+		while(client_s.available()){
+			char c = client_s.read();
+			debug_out(String(c),0);
+		}
+
+		debug_out(F("\nclosing connection\n------\n\n"),1);
+	} 
+	
+	debug_out(F("End connecting to "),0);
+	debug_out(host,1);
+
+	wdt_reset(); // nodemcu is alive
+	yield();
+#endif
+}
+
 void setup() 
 {
   Serial.begin(9600);
@@ -124,7 +186,7 @@ void setup()
 }
 
 void loop() 
-{  
+{ 
   act_milli = millis();  
   
   wdt_reset();
@@ -136,6 +198,7 @@ void loop()
 		debug_out(F("BEWEGUNG BEWEGUNG BEWEGUNG: "),0);
 		debug_out(String(act_milli / 1000),1);
 		analogWrite(redpin, 250);
+		sendData(data, host_pushover, 443, url_pushover, F("application/x-www-form-urlencoded"));
 	}
 	else{
 		analogWrite(redpin, 0);
