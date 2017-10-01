@@ -39,6 +39,8 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 
 int pirValue; // variable to store read PIR Value
 unsigned long act_milli;
+unsigned long sendtime;
+const unsigned long sending_intervall_ms = 60000;
 unsigned long last_update_attempt;
 const unsigned long pause_between_update_attempts = 86400000;
 
@@ -182,6 +184,8 @@ void setup()
   wdt_disable();
   wdt_enable(30000);// 30 sec
   
+  sendtime = millis();
+  
   debug_out(F("Es geht los."),1);
 }
 
@@ -198,7 +202,10 @@ void loop()
 		debug_out(F("BEWEGUNG BEWEGUNG BEWEGUNG: "),0);
 		debug_out(String(act_milli / 1000),1);
 		analogWrite(redpin, 250);
-		sendData(data, host_pushover, 443, url_pushover, F("application/x-www-form-urlencoded"));
+		if ((act_milli-sendtime) > sending_intervall_ms){
+			sendData(data, host_pushover, 443, url_pushover, F("application/x-www-form-urlencoded"));
+			sendtime = millis();
+		}		
 	}
 	else{
 		analogWrite(redpin, 0);
