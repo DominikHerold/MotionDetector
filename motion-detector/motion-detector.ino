@@ -38,20 +38,21 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 #define redpin D2
 #define bluepin D5
 
-int pirValue; // variable to store read PIR Value
 unsigned long act_milli;
-unsigned long sendtime;
-const unsigned long sending_intervall_ms = 60000;
+unsigned long last_ping;
 unsigned long last_update_attempt;
 const unsigned long pause_between_update_attempts = 86400000;
 
 String esp_chipid;
 
-char wlanssid[65] = "foo";
-char wlanpwd[65] = "bar";
-String data = "token=foo&user=bar&message=BEWEGUNG BEWEGUNG BEWEGUNG"; // https://pushover.net/api
-const char* host_pushover = "api.pushover.net";
-const char* url_pushover = "/1/messages.json";
+char wlanssid[65] = "foo"; //Todo Change
+char wlanpwd[65] = "bar"; //Todo Change
+String data = "{\"ping\": \"ping\"}";
+const char* host = "www.foo.de"; //Todo Change
+const char* url_motion = "/Motion/Create";
+const char* url_wlan = "/Wlan/Create";
+const char* authstring = "foobar=="; //Todo Change
+int port = 443; //Todo Change
 
 /*****************************************************************
 /* Debug output                                                  *
@@ -116,7 +117,7 @@ void connectWifi() {
 /*****************************************************************
 /* send data to rest api                                         *
 /*****************************************************************/
-void sendData(const String& data, const char* host, const int httpPort, const char* url, const String& contentType) {
+void sendData(const String& data, const char* host, const int httpPort, const char* url, const String& contentType, const char* basic_auth_string) {
 #if defined(ESP8266)
 
 	debug_out(F("Start connecting to "),0);
@@ -125,6 +126,7 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 	String request_head = F("POST "); request_head += String(url); request_head += F(" HTTP/1.1\r\n");
 	request_head += F("Host: "); request_head += String(host) + "\r\n";
 	request_head += F("Content-Type: "); request_head += contentType + "\r\n";
+	if (basic_auth_string != "") { request_head += F("Authorization: Basic "); request_head += String(basic_auth_string) + "\r\n";}
 	request_head += F("Content-Length: "); request_head += String(data.length(),DEC) + "\r\n";
 	request_head += F("Connection: close\r\n\r\n");
 
@@ -162,6 +164,37 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 		}
 
 		debug_out(F("\nclosing connection\n------\n\n"),1);
+	} else {
+
+		WiFiClient client;
+		
+		client.setNoDelay(true);
+		client.setTimeout(20000);
+
+		if (!client.connect(host, httpPort)) {
+			debug_out(F("connection failed"),1);
+			return;
+		}
+
+		debug_out(F("Requesting URL: "),0);
+		debug_out(url,1);
+		debug_out(esp_chipid,1);
+		debug_out(data,1);
+
+		client.print(request_head);
+
+		client.println(data);
+
+		delay(10);
+
+		// Read reply from server and print them
+		while(client.available()){
+			char c = client.read();
+			debug_out(String(c),0);
+		}
+
+		debug_out(F("\nclosing connection\n------\n\n"),1);
+
 	} 
 	
 	debug_out(F("End connecting to "),0);
@@ -185,12 +218,11 @@ void setup()
   delay(10);
   debug_out("\nChipId: ",0);
   debug_out(esp_chipid,1);
-  pirValue = 0;
   
   wdt_disable();
-  wdt_enable(30000);// 30 sec
+  wdt_enable(30000);// 30 sec 
   
-  sendtime = millis();
+  last_ping = millis();
   
   debug_out(F("Es geht los."),1);
 }
@@ -201,21 +233,20 @@ void loop()
   
   wdt_reset();
   
+  if ((act_milli-last_ping) > (10 * 1000)){
+	sendData(data, host, port, url_wlan, F("application/json"), authstring);
+	last_ping = act_milli;
+  }
+  
   int actualPirValue = digitalRead(pirPin);
-  if (actualPirValue != pirValue){
-	pirValue = actualPirValue;
-	if (pirValue == 1){
-		debug_out(F("BEWEGUNG BEWEGUNG BEWEGUNG: "),0);
-		debug_out(String(act_milli / 1000),1);
-		analogWrite(redpin, 250);
-		if ((act_milli-sendtime) > sending_intervall_ms){
-			sendData(data, host_pushover, 443, url_pushover, F("application/x-www-form-urlencoded"));
-			sendtime = millis();
-		}		
-	}
-	else{
-		analogWrite(redpin, 0);
-	}
+  if (actualPirValue == 1){
+    debug_out(F("BEWEGUNG BEWEGUNG BEWEGUNG: "),0);
+    debug_out(String(act_milli / 1000),1);
+    analogWrite(redpin, 250);
+    sendData(data, host, port, url_motion, F("application/json"), authstring);
+  }
+  else{
+    analogWrite(redpin, 0);
   }
 	
   if ((act_milli-last_update_attempt) > (28 * pause_between_update_attempts)) {
