@@ -254,7 +254,7 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 
 	}
 
-	if (result.contains("ALARM"){
+	if (result.indexOf("ALARM") >= 0){
 		alarmSound();
 	}
 	
