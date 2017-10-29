@@ -37,6 +37,7 @@ RHReliableDatagram manager(rf69, CLIENT_ADDRESS);
 #define pirPin D1 // Input for HC-SR501
 #define redpin D2
 #define bluepin D5
+#define speakerpin D8
 
 unsigned long act_milli;
 unsigned long last_ping;
@@ -63,6 +64,58 @@ void debug_out(const String& text, const bool linebreak) {
 	} else {
 		Serial.print(text);
 	}
+}
+
+void alarmSound(){
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
+	
+	analogWrite (speakerpin, 255);
+	delay (500);
+	analogWrite (speakerpin, 0);
+	delay (500);
 }
 
 /*****************************************************************
@@ -132,6 +185,8 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 
 	// Use WiFiClient class to create TCP connections
 
+	String result = F(" ");
+	
 	if (httpPort == 443) {
 
 		WiFiClientSecure client_s;
@@ -161,6 +216,7 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 		while(client_s.available()){
 			char c = client_s.read();
 			debug_out(String(c),0);
+			result += String(c);
 		}
 
 		debug_out(F("\nclosing connection\n------\n\n"),1);
@@ -191,11 +247,16 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 		while(client.available()){
 			char c = client.read();
 			debug_out(String(c),0);
+			result += String(c);
 		}
 
 		debug_out(F("\nclosing connection\n------\n\n"),1);
 
-	} 
+	}
+
+	if (result.contains("ALARM"){
+		alarmSound();
+	}
 	
 	debug_out(F("End connecting to "),0);
 	debug_out(host,1);
@@ -214,6 +275,7 @@ void setup()
   pinMode(pirPin, INPUT);
   pinMode(redpin, OUTPUT);
   pinMode(bluepin, OUTPUT);
+  pinMode(speakerpin, OUTPUT);
   connectWifi();  
   delay(10);
   debug_out("\nChipId: ",0);
