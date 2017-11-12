@@ -196,6 +196,8 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 
 		if (!client_s.connect(host, httpPort)) {
 			debug_out(F("connection failed"),1);
+			delay (10000);
+			ESP.restart();
 			return;
 		}
 
@@ -229,6 +231,8 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 
 		if (!client.connect(host, httpPort)) {
 			debug_out(F("connection failed"),1);
+			delay (10000);
+			ESP.restart();
 			return;
 		}
 
