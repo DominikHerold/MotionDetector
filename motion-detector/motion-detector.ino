@@ -77,44 +77,44 @@ void alarmSound(){
 	analogWrite (speakerpin, 0);
 	delay (500);
 	
-	analogWrite (speakerpin, 255);
+//	analogWrite (speakerpin, 255);
 	delay (500);
-	analogWrite (speakerpin, 0);
-	delay (500);
-	
-	analogWrite (speakerpin, 255);
-	delay (500);
-	analogWrite (speakerpin, 0);
+//	analogWrite (speakerpin, 0);
 	delay (500);
 	
-	analogWrite (speakerpin, 255);
+//	analogWrite (speakerpin, 255);
 	delay (500);
-	analogWrite (speakerpin, 0);
-	delay (500);
-	
-	analogWrite (speakerpin, 255);
-	delay (500);
-	analogWrite (speakerpin, 0);
+//	analogWrite (speakerpin, 0);
 	delay (500);
 	
-	analogWrite (speakerpin, 255);
+//	analogWrite (speakerpin, 255);
 	delay (500);
-	analogWrite (speakerpin, 0);
-	delay (500);
-	
-	analogWrite (speakerpin, 255);
-	delay (500);
-	analogWrite (speakerpin, 0);
+//	analogWrite (speakerpin, 0);
 	delay (500);
 	
-	analogWrite (speakerpin, 255);
+//	analogWrite (speakerpin, 255);
 	delay (500);
-	analogWrite (speakerpin, 0);
+//	analogWrite (speakerpin, 0);
 	delay (500);
 	
-	analogWrite (speakerpin, 255);
+//	analogWrite (speakerpin, 255);
 	delay (500);
-	analogWrite (speakerpin, 0);
+//	analogWrite (speakerpin, 0);
+	delay (500);
+	
+//	analogWrite (speakerpin, 255);
+	delay (500);
+//	analogWrite (speakerpin, 0);
+	delay (500);
+	
+//	analogWrite (speakerpin, 255);
+	delay (500);
+//	analogWrite (speakerpin, 0);
+	delay (500);
+	
+//	analogWrite (speakerpin, 255);
+	delay (500);
+//	analogWrite (speakerpin, 0);
 	delay (500);
 }
 
