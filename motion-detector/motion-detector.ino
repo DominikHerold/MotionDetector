@@ -1,4 +1,3 @@
-#include <Arduino.h>
 
 #if defined(ESP8266)
 #include <FS.h>                     // must be first
@@ -17,11 +16,7 @@
 #include <RH_RF69.h>
 #include <SPI.h>
 #endif
-#include <ArduinoJson.h>
 #include <Wire.h>
-#include <DHT.h>
-#include <Adafruit_BMP085.h>
-#include <Adafruit_BME280.h>
 #include <Ticker.h>
 
 #if defined(ESP8266)
@@ -190,6 +185,7 @@ void sendData(const String& data, const char* host, const int httpPort, const ch
 	if (httpPort == 443) {
 
 		WiFiClientSecure client_s;
+		client_s.setInsecure();
 		
 		client_s.setNoDelay(true);
 		client_s.setTimeout(20000);
